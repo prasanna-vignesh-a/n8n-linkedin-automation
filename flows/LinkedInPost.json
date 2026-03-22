@@ -1,0 +1,324 @@
+{
+  "name": "LinkedInPost",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-04-17",
+        "options": {}
+      },
+      "id": "ecd15309-5199-4cb3-9244-cd4cd7069999",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        416,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "j7pGYyJ24FToDlzC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Day }} of the #100DaysOfPowerPlatform challenge. Topic: {{ $json.Topic }}. Write a LinkedIn post.\nSample Format is \n🚀 #100DaysOfPowerPlatform – Day 54\n💬 Creating Topics & Conversation Flows in Copilot Studio\n\nWant to build an intelligent chatbot for your business? Microsoft Copilot Studio (formerly Power Virtual Agents) lets you create powerful AI chatbots without any coding – and it all starts with well-structured topics and conversation flows. Let’s explore! 👇\n\n🔹 What is a Topic in Copilot Studio?\n\nA topic is a conversation path based on what a user might ask. For example:\n💬 \"I want to apply for leave\" → Triggers the Leave Request topic.\n\nEach topic includes:\n✅ Trigger phrases\n✅ Conversation steps (Questions, Messages, Conditions, Actions)\n✅ Power Automate integrations\n\n🔹 How to Create a Topic in Copilot Studio\n\n1️⃣ Go to Copilot Studio\n2️⃣ Click Topics → + New Topic\n3️⃣ Add Trigger Phrases (like “I want to reset my password”)\n4️⃣ Define Conversation Flow using a graphical editor\n5️⃣ Add Questions, Conditions, and Actions as needed\n6️⃣ Test the chatbot in the Test Bot panel\n\n💡 Example Use Case: Leave Request Chatbot\n\n👤: I want to apply for leave\n🤖: Sure! What type of leave do you need? (Sick, Casual, Annual)\n🤖: What are the start and end dates?\n🤖: Got it. Your leave request has been submitted!\n\nYou can capture this info and send it to Power Automate for processing and storage in Dataverse or SharePoint!\n\n🛠 Pro Tip:\nStart with FAQs or Repetitive Tasks – perfect for chatbot automation! Think password resets, leave requests, policy queries, etc.\n\n💬 Have you started creating bots in Copilot Studio?\nShare your favorite use case in the comments 👇\n\n#CopilotStudio #PowerPlatform #Chatbots #PowerVirtualAgents #AIChatbots #PowerAutomate #100DaysOfPowerPlatform #LowCode #NoCode #Microsoft\n\nDo not add any preface like “Here is your LinkedIn post”. Only return the final post content.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a Power Platform expert writing daily LinkedIn posts."
+        }
+      },
+      "id": "07b20e41-b2d1-4fc9-b174-4cb5ed70213b",
+      "name": "Generate AI Content",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        432,
+        0
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1J2dV5sP_YDAtp2Q-tPr6Kk6f7D91hI9ulAvNmyBZM1E",
+          "mode": "list",
+          "cachedResultName": "LinkedinTopics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1J2dV5sP_YDAtp2Q-tPr6Kk6f7D91hI9ulAvNmyBZM1E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1J2dV5sP_YDAtp2Q-tPr6Kk6f7D91hI9ulAvNmyBZM1E/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Post Status",
+              "lookupValue": "Pending"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        160,
+        0
+      ],
+      "id": "797e443b-7f96-4c5f-b8a1-e8bab73e4780",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IXjtfQxudbBoEI00",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "prasannavignesha.mech@gmail.com",
+        "subject": "Linkedin Post",
+        "emailType": "text",
+        "message": "=Post has been Published",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1648,
+        0
+      ],
+      "id": "44bd1aa5-5c73-4ef3-ad61-6c9804eddc1b",
+      "name": "Gmail",
+      "webhookId": "e4546b35-706a-4a7d-95d9-04f9abcac2bb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aftza8cimb0l75Lz",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/v2/ugcPots",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Authorization\": \"Bearer AQVyB4dxCRQDjc5NWPN8QIzgm4im4eJU1rcEcRgxUqmoKAcBFpwTeLuFcbXUunFmq1DoWC-WdvSJlC0V4ok2TJdbrl_ZBqV8pFv-aN9L2Ay9eTWnrzypLzJ9GZE-tY2KqRwN13EXnQre_b4h0QRYindPbmPJmmqqnnv8tdTaBcdTjq6hb_QTpd2BAkulVBUPlMPw_ZsqXj2WLyB1sqLpj5rAiMdm43CSRuqRm_Lz0-FRrwVl8BcEbv1cIj1qe26MZlxSTLa-rHHRj-op7IsJfRzYH_qnqQ13mflPmsIj3loIYkngdNonlhi3Klsj1RoktY30sMeY0W0-P28r-tPHK6D46oITzg\"\n}",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n    \"author\": \"urn:li:person:4rRimWs2JN\",\n    \"lifecycleState\": \"PUBLISHED\",\n    \"specificContent\": {\n        \"com.linkedin.ugc.ShareContent\": {\n            \"shareCommentary\": {\n                \"text\": \"{{ $json.cleanOutput }}\"\n            },\n            \"shareMediaCategory\": \"NONE\"\n        }\n    },\n    \"visibility\": {\n        \"com.linkedin.ugc.MemberNetworkVisibility\": \"PUBLIC\"\n    }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1136,
+        0
+      ],
+      "id": "2119a549-651c-4cde-8812-930cb3ba763f",
+      "name": "HTTP Request1",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "u1rf2TabmJUHjUZU",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1J2dV5sP_YDAtp2Q-tPr6Kk6f7D91hI9ulAvNmyBZM1E",
+          "mode": "list",
+          "cachedResultName": "LinkedinTopics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1J2dV5sP_YDAtp2Q-tPr6Kk6f7D91hI9ulAvNmyBZM1E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1J2dV5sP_YDAtp2Q-tPr6Kk6f7D91hI9ulAvNmyBZM1E/edit#gid=0"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1424,
+        0
+      ],
+      "id": "0af60f80-a0ab-4c02-8d35-f671872eaf9a",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IXjtfQxudbBoEI00",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        240
+      ],
+      "id": "446d134a-d358-4d61-9dea-87cef4b03cb4",
+      "name": "Simple Memory",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawOutput = $json.output;\n\nconst cleaned = rawOutput\n  .replace(/\\*\\*(.*?)\\*\\*/g, '🔹 $1')   // Replace **bold** with 🔹 text\n  .replace(/\\n/g, \"\\\\n\")               // Escape newlines\n  .replace(/\"/g, '\\\\\"');               // Escape double quotes\n\nreturn [\n  {\n    json: {\n      cleanOutput: cleaned\n    }\n  }\n];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "dbd16b95-847c-4513-9c1c-222b143d6329",
+      "name": "CleanOutput"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "monthsInterval": 10,
+              "triggerAtDayOfMonth": 10,
+              "triggerAtHour": 2,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e57a15d4-f459-42f9-a625-93727ffc6ccc",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Generate AI Content": {
+      "main": [
+        [
+          {
+            "node": "CleanOutput",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate AI Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Generate AI Content",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CleanOutput": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a36ab061-8606-4866-be43-a4da7984f40f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0c3aa4980ed9b5a3f410f48dcd7791bf11de644f196ca83d25bdcf7338a6cf50"
+  },
+  "id": "TI2s41e1NYxwsS6V",
+  "tags": []
+}
