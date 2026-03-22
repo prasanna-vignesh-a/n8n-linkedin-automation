@@ -1,14 +1,14 @@
 # 🤖 Autonomous LinkedIn Content Engine — n8n Agentic Workflow
 
-> Architected an end-to-end agentic workflow that autonomously generated, validated, and published LinkedIn posts for **80+ consecutive days** — zero manual intervention.
+> Architected an end-to-end agentic workflow that autonomously generated, validated, and published LinkedIn posts for **80+ consecutive days — zero manual intervention.**
 
 ---
 
 ## 📌 Overview
 
-This project automates the entire LinkedIn content lifecycle using **n8n** as the orchestration layer. An LLM generates the post, a validation agent checks quality, and the content is published directly via the LinkedIn API — all on a scheduled cadence, fully unattended.
+This project automates the entire LinkedIn content lifecycle using **n8n** as the orchestration layer. Every day at 9:30 PM IST, the workflow picks up the next topic from a Google Sheet, generates a formatted LinkedIn post using **Google Gemini 2.5 Flash**, cleans the output, and publishes it directly via the LinkedIn API — fully unattended.
 
-**Result:** 80+ consecutive days of consistent LinkedIn presence with no human involvement.
+**Result:** 80+ consecutive days of consistent, high-quality LinkedIn presence with no human involvement.
 
 ---
 
@@ -16,32 +16,46 @@ This project automates the entire LinkedIn content lifecycle using **n8n** as th
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     SCHEDULER (Cron)                    │
-│              Triggers daily at defined time             │
+│              SCHEDULER (Daily)              │
+│           Cron trigger fires every day                  │
 └───────────────────────┬─────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────┐
-│               CONTENT GENERATION (LLM)                  │
-│       Prompt → Google Gemini → Draft post content       │
+│           FETCH TOPIC (Google Sheets)                   │
+│   Reads first row where Post Status = "Pending"         │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────┐
+│           CONTENT GENERATION (Google Gemini)            │
+│   Gemini 2.5 Flash → formats post with emojis,          │
+│   post with emojis, sections, hashtags                  │
 └───────────────────────┬─────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────┐
 │                 CLEAN OUTPUT                            │
-│   Strips formatting artifacts → publish-ready text      │
+│   Strips markdown, escapes quotes & newlines            │
+│   → publish-ready plain text                            │
 └───────────────────────┬─────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────┐
 │              AUTO-PUBLISH (LinkedIn API)                 │
-│           Posts directly to LinkedIn profile            │
+│     HTTP POST → api.linkedin.com/v2/ugcPosts            │
 └───────────────────────┬─────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────┐
-│           LOGGING & NOTIFICATION                        │
-│     Google Sheets (log) + Gmail (status notification)   │
+│           LOGGING & CLEANUP                             │
+│   Deletes used row from Google Sheets                   │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────┐
+│           GMAIL NOTIFICATION                            │
+│   Sends "Post has been Published" email confirmation    │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -58,45 +72,49 @@ This project automates the entire LinkedIn content lifecycle using **n8n** as th
 | Layer | Tool |
 |---|---|
 | Workflow Orchestration | n8n |
-| Content Generation | Google Gemini (via n8n AI Agent node) |
-| Validation | Output parser + CleanOutput function node |
-| Publishing | LinkedIn API (HTTP Request) |
-| Logging | Google Sheets |
+| LLM | Google Gemini 2.5 Flash (`gemini-2.5-flash-preview-04-17`) |
+| Output Processing | n8n Code node (JavaScript) |
+| Publishing | LinkedIn UGC API (`/v2/ugcPosts`) |
+| Content Queue | Google Sheets (`Post Status: Pending`) |
 | Notifications | Gmail |
-| Scheduling | n8n Cron Node |
+| Scheduling | n8n Cron — daily |
 
 ---
 
 ## 🔄 Workflow Breakdown
 
-### 1. Scheduler
-- Cron-based trigger fires at a set time daily
-- Kicks off the full pipeline with zero manual input
+### 1. Daily Schedule
+- Fires every day
+- Kicks off the full pipeline automatically
 
-### 2. Google Sheets (Topic Source)
-- Reads the next topic/prompt from a Google Sheet
-- Acts as a content queue — each row is a scheduled post idea
+### 2. Fetch Topic from Sheet
+- Reads the first row from Google Sheets where `Post Status = Pending`
+- Each row contains a `Day` number and `Topic` for that day's post
+- Uses `returnFirstMatch` to always pick the next pending topic
 
-### 3. Content Generation (Google Gemini)
-- n8n AI Agent node powered by Google Gemini Chat Model
-- Generates a LinkedIn post based on the topic pulled from Sheets
-- Output Parser ensures the response is clean and structured
+### 3. Generate LinkedIn Post (Gemini 2.5 Flash)
+- n8n AI Agent node powered by Google Gemini 2.5 Flash
+- System prompt: *"You are a Power Platform expert writing daily LinkedIn posts"*
+- Generates a fully formatted post with emojis, sections, and hashtags
+- Follows a consistent format with day number, topic, emojis, and hashtags
 
-### 4. CleanOutput
-- Function node that strips any unwanted formatting or artifacts
-- Ensures the final post text is publish-ready
+### 4. Format Post Output
+- JavaScript code node that post-processes the LLM output
+- Replaces `**bold**` markdown with `🔹 text`
+- Escapes newlines and double quotes for clean JSON delivery to LinkedIn API
 
-### 5. Auto-Publish (LinkedIn API)
-- HTTP Request node POSTs directly to `api.linkedin.com`
-- No copy-paste, no human approval step
+### 5. Publish to LinkedIn
+- HTTP POST to `api.linkedin.com/v2/ugcPosts`
+- Publishes as a public UGC post on the LinkedIn profile
+- Uses OAuth2 credentials for authentication
 
-### 6. Logging & Cleanup
-- Used row is deleted from Google Sheets after publishing
-- Keeps the content queue clean and prevents re-publishing
+### 6. Remove Used Topic
+- Deletes the published row from Google Sheets
+- Keeps the queue clean and prevents any topic from being posted twice
 
-### 7. Gmail Notification
-- Sends an email confirmation on every successful post
-- Instant visibility into failures without manual monitoring
+### 7. Send Success Notification
+- Gmail sends a confirmation email after every successful publish
+- Instant visibility — no need to manually check if the workflow ran
 
 ---
 
@@ -106,7 +124,7 @@ This project automates the entire LinkedIn content lifecycle using **n8n** as th
 n8n-linkedin-automation/
 ├── README.md
 ├── flows/
-│   └── linkedin-automation.json          # Full workflow export
+│   └── linkedin-automation.json          # Full workflow export (sanitized)
 └── screenshots/
     └── workflow-overview.png             # n8n canvas screenshot
 ```
@@ -132,15 +150,19 @@ n8n-linkedin-automation/
    - Google Sheets OAuth (Google account)
    - Gmail OAuth (Google account)
 
-6. Activate the workflows — the scheduler takes it from there
+6. Set up your Google Sheet with columns: `Day`, `Topic`, `Post Status`
+   - Set `Post Status = Pending` for each row
+
+7. Activate the workflow — it runs every day automatically
 
 ---
 
 ## 💡 Key Design Decisions
 
-- **Google Sheets as content queue** — topics are stored as rows in a Sheet; the flow reads the next one, uses it, then deletes it — clean and self-managing
-- **CleanOutput function node** — acts as a post-processing layer to strip LLM artifacts before publishing, ensuring every post looks hand-written
-- **Gmail failure alerts** — immediate email notification on success or failure so issues are caught without any manual monitoring
+- **Google Sheets as a self-managed content queue** — topics stored as rows, filtered by `Post Status = Pending`, deleted after use — no row ever gets posted twice
+- **Gemini 2.5 Flash for generation** — fast, cost-efficient, and produces consistently formatted LinkedIn posts with emojis and structure
+- **CleanOutput code node** — bridges the gap between LLM markdown output and LinkedIn's plain-text API requirement; converts `**bold**` to emoji bullets and escapes special characters
+- **Daily 9:30 PM IST schedule** — timed for peak LinkedIn engagement in the Indian audience timezone
 
 ---
 
@@ -158,10 +180,19 @@ n8n-linkedin-automation/
 ## 🛠️ Built With
 
 - [n8n](https://n8n.io) — open-source workflow automation
-- [Google Gemini API](https://ai.google.dev) — LLM for content generation
-- [LinkedIn API](https://developer.linkedin.com) — auto-publishing
-- [Google Sheets API](https://developers.google.com/sheets) — content queue & logging
-- [Gmail API](https://developers.google.com/gmail) — run notifications
+- [Google Gemini API](https://ai.google.dev) — Gemini 2.5 Flash for content generation
+- [LinkedIn UGC API](https://developer.linkedin.com) — auto-publishing posts
+- [Google Sheets API](https://developers.google.com/sheets) — content queue management
+- [Gmail API](https://developers.google.com/gmail) — publish confirmation notifications
+
+---
+
+## ⚠️ Setup Notes
+
+- Replace `YOUR_LINKEDIN_TOKEN_HERE` in the HTTP Request node with your LinkedIn Bearer token
+- Replace `YOUR_LINKEDIN_PERSON_ID` in the request body with your LinkedIn URN (e.g. `urn:li:person:xxxxxxxx`)
+- Replace `YOUR_GOOGLE_SHEET_ID` with your actual Google Sheet ID
+- Replace `YOUR_EMAIL@gmail.com` with your Gmail address
 
 ---
 
