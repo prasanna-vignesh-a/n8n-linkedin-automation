@@ -114,7 +114,7 @@
         "genericAuthType": "oAuth2Api",
         "sendHeaders": true,
         "specifyHeaders": "json",
-        "jsonHeaders": "{\n  \"Authorization\": \"Bearer AQVyB4dxCRQDjc5NWPN8QIzgm4im4eJU1rcEcRgxUqmoKAcBFpwTeLuFcbXUunFmq1DoWC-WdvSJlC0V4ok2TJdbrl_ZBqV8pFv-aN9L2Ay9eTWnrzypLzJ9GZE-tY2KqRwN13EXnQre_b4h0QRYindPbmPJmmqqnnv8tdTaBcdTjq6hb_QTpd2BAkulVBUPlMPw_ZsqXj2WLyB1sqLpj5rAiMdm43CSRuqRm_Lz0-FRrwVl8BcEbv1cIj1qe26MZlxSTLa-rHHRj-op7IsJfRzYH_qnqQ13mflPmsIj3loIYkngdNonlhi3Klsj1RoktY30sMeY0W0-P28r-tPHK6D46oITzg\"\n}",
+        "jsonHeaders": "{\n  \"Authorization\": \"Bearer YOUR_LINKEDIN_TOKEN_HERE\"\n}",
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
